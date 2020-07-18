@@ -204,31 +204,37 @@ class Scene():
         def act():
 
 
-
+            start_act = time.time()
             time_list_ = []
             for i in self.started_list_NPC:
                 time_list_.append(i.first())
 
             res  = pool.map( self.scaning,\
                              time_list_)
+            print('->time act_part_I(): ', time.time() - start_act, ' seconds.')
 
+            start_act = time.time()
             list_pair_res_and_modeley = []
             i_int = 0
             for i in res:
                 list_pair_res_and_modeley.append( Pair(i,self.list_modeley[i_int]) )
                 i_int += 1
+            print('->time act_part_II(): ', time.time() - start_act, ' seconds.')
 
 
+            start_act = time.time()
             list_result = pool.map( second_to_first ,   list_pair_res_and_modeley)
-
-
             i_int = 0
             for i in list_result:
                 self.activ_npc(number_max_element(i) , self.started_list_NPC[i_int])
                 i_int += 1
+            print('->time act_part_III(): ', time.time() - start_act, ' seconds.')
+
 
         def tik():
+            start_4 = time.time()
             init_obj()
+            print('->time init_obj(): ', time.time() - start_4, ' seconds.')
             step = 0
             while (step < number_step):
                 act()
@@ -256,10 +262,20 @@ class Scene():
 
         while(base.eras < base.number_eras):
             start = time.time()
+
+            start_1 = time.time()
             list_points = tik()
+            print('time tik(): ', time.time() - start_1,' seconds.')
+
+            start_2 = time.time()
             base.start_eras(list_points)
+            print('time start_eras(): ', time.time() - start_2, ' seconds.')
+
             i_int = 0
+            start_3 = time.time()
             for i in self.list_modeley:
                 i.determine_model_weights_by_tensor(vector_in_tensor(base.list_individes[i_int].gene , i.get_model_weights_by_tensor()) )
                 i_int += 1
-            print('time: ', time.time() - start, ' seconds.')
+            print('time determine_model_weights_by_tensor(): ', time.time() - start_3, ' seconds.')
+
+            print('all time: ', time.time() - start, ' seconds.')
