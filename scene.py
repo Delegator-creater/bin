@@ -116,6 +116,7 @@ class Scene():
 
     def simulation(self , size_NPC : int , size_Food : int , number_step : int , number_epoh : int):
 
+
         def tensor_in_vector (tensor_3):
             vector: list[float] = []
             for i in tensor_3:
@@ -238,10 +239,11 @@ class Scene():
                                  mutation_chance= 0.3, elite_part = 0.1, number_eras=number_epoh )
 
         while(base.eras < base.number_eras):
+            start = time.time()
             list_points = tik()
             base.start_eras(list_points)
             i_int = 0
             for i in self.list_modeley:
                 i.determine_model_weights_by_tensor(vector_in_tensor(base.list_individes[i_int].gene , i.get_model_weights_by_tensor()) )
                 i_int += 1
-            print("end")
+            print('time: ', time.time() - start, ' seconds.')
