@@ -159,15 +159,31 @@ class Scene():
             i_int = 0
             self.started_list_NPC.clear()
             while (i_int < size_NPC):
-                self.started_list_NPC.append(Pair(NPC([random.randint(0, self.sizex), random.randint(0, self.sizey)] \
-                                                      , [1, 0]), None))
+                triger : bool = True
+                new_crd = []
+                while (triger):
+                    triger = False
+                    new_crd = [random.randint(0, self.sizex), random.randint(0, self.sizey)]
+                    for i in self.started_list_NPC:
+                        triger = (i.first().crd == new_crd)
+
+                self.started_list_NPC.append(Pair(NPC(new_crd , [1, 0]), None))
                 i_int += 1
 
             self.started_list_Food.clear()
             i_int = 0
             while (i_int < size_Food):
-                self.started_list_Food.append(Pair(Food([random.randint(0, self.sizex), random.randint(0, self.sizey)] \
-                                                        , [1, 0]), None))
+                triger: bool = True
+                new_crd
+                while (triger):
+                    triger = False
+                    new_crd = [random.randint(0, self.sizex), random.randint(0, self.sizey)]
+                    for i in self.started_list_NPC:
+                        triger = (i.first().crd == new_crd)
+                    for i in self.started_list_Food:
+                        triger = (i.first().crd == new_crd)
+
+                self.started_list_Food.append(Pair(Food(new_crd, [1, 0]), None))
                 i_int += 1
 
 
