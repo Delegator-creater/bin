@@ -53,10 +53,10 @@ class Scene():
 
     def if_food (self , npc : NPC):
         for i in self.list_obj:
-            if (type(i) == Food):
-                if ( npc.crd == i.crd ):
-                    npc.eat_food(i)
-                    print("eat")
+            if (type(i.first()) == Food):
+                if ( npc.crd == i.first().crd ):
+                    npc.eat_food(i.first())
+                    #print("eat")
 
     def move_NPC(self, angle_step, unit_list_obj: Pair):
         new_crd    = [ 0 , 0]
@@ -73,6 +73,17 @@ class Scene():
             else:
                 unit_list_obj.first().wait()
 
+    def rotation_obj(self , sin_angle : float , unit_list_obj: Pair ):
+
+        old_angle = unit_list_obj.first().angle
+        new_angle = [-old_angle[1] * sin_angle,\
+                      old_angle[0] * sin_angle]
+        unit_list_obj.first().rotation(new_angle)
+
+    def rotation_NPC(self , angle_step, unit_list_obj: Pair ):
+        if (unit_list_obj.first().status == "live"):
+            self.rotation_obj(angle_step, unit_list_obj)
+
     def move_objects(self , list_new_crd):
 
         def move_obj(new_x , new_y , unit_list_obj : Pair ):
@@ -86,14 +97,12 @@ class Scene():
 
     def activ_npc(self, d, unit : Pair):
         if (d == 0):
-            self.move_NPC([1, 0],  unit)
+            self.move_NPC( unit.first().angle ,  unit)
         if (d == 1):
-            self.move_NPC([0, -1], unit)
+            self.rotation_NPC( 1, unit)
         if (d == 2):
-            self.move_NPC([-1, 0], unit)
+            self.rotation_NPC(-1, unit)
         if (d == 3):
-            self.move_NPC([0, 1],  unit)
-        if (d == 4):
             list_npc = []
             for i in self.started_list_NPC:
                 list_npc.append(i.first())
@@ -103,15 +112,21 @@ class Scene():
         result = [0, 0]
         for mm in self.started_list_NPC:
             if (mm.first() != npc):
-                angle = dot( npc.vector_to(mm.first()), npc.angle)
-                if (angle > 0):
-                    result[0] += (angle ** 2) / (1 + npc.length_to_(mm.first()))
+                crd = npc.vector_to(mm.first())
+                r = dot(crd , crd) ** 0.5
+                if ( r <= 5 ):
+                    angle = dot( crd, npc.angle)
+                    if (angle > 0):
+                        result[0] += (angle ** 2) / (1 + r)
 
         for mm in self.started_list_Food:
             if (mm.first().exist):
-                angle = dot( npc.vector_to(mm.first()), npc.angle)
-                if (angle > 0):
-                    result[1] += (angle ** 2) / (1 + npc.length_to_(mm.first()))
+                crd = npc.vector_to(mm.first())
+                r = dot(crd , crd) ** 0.5
+                if ( r <= 5 ):
+                    angle = dot( crd, npc.angle)
+                    if (angle > 0):
+                        result[1] += (angle ** 2) / (1 + r)
         return result
 
     def simulation(self , size_NPC : int , size_Food : int , number_step : int , number_epoh : int):
@@ -146,7 +161,6 @@ class Scene():
 
             return list_matrix
 
-        pool = Pool()
 
         self.drawing = False
         import random
@@ -157,6 +171,7 @@ class Scene():
 
         def init_obj():
             i_int = 0
+            self.list_obj.clear()
             self.started_list_NPC.clear()
             while (i_int < size_NPC):
                 triger : bool = True
@@ -167,7 +182,9 @@ class Scene():
                     for i in self.started_list_NPC:
                         triger = (i.first().crd == new_crd)
 
-                self.started_list_NPC.append(Pair(NPC(new_crd , [1, 0]), None))
+                new_pair = Pair(NPC(new_crd , [1, 0]), None)
+                self.started_list_NPC.append(new_pair)
+                self.list_obj.append(new_pair)
                 i_int += 1
 
             self.started_list_Food.clear()
@@ -183,7 +200,9 @@ class Scene():
                     for i in self.started_list_Food:
                         triger = (i.first().crd == new_crd)
 
-                self.started_list_Food.append(Pair(Food(new_crd, [1, 0]), None))
+                new_pair = Pair(Food(new_crd, [1, 0]), None)
+                self.started_list_Food.append(new_pair)
+                self.list_obj.append(new_pair)
                 i_int += 1
 
 
@@ -191,7 +210,7 @@ class Scene():
         self.list_modeley = []
         i_int = 0
         while ( i_int < size_NPC):
-            self.list_modeley.append(Model(2,5))
+            self.list_modeley.append(Model(2,4))
             self.list_modeley[i_int].add_layer(Layer(10 , function_activate_name= "Relu" , prm_neuron="random"))
             self.list_modeley[i_int].add_LSTM( LSTM(10,10,10))
             self.list_modeley[i_int].add_layer(Layer(10 , function_activate_name= "Relu" , prm_neuron="random"))
@@ -204,41 +223,41 @@ class Scene():
         def act():
 
 
-            start_act = time.time()
+
             time_list_ = []
             for i in self.started_list_NPC:
                 time_list_.append(i.first())
 
-            res  = pool.map( self.scaning,\
+            res  = map( self.scaning,\
                              time_list_)
-            print('->time act_part_I(): ', time.time() - start_act, ' seconds.')
+           
 
-            start_act = time.time()
+           
             list_pair_res_and_modeley = []
             i_int = 0
             for i in res:
                 list_pair_res_and_modeley.append( Pair(i,self.list_modeley[i_int]) )
                 i_int += 1
-            print('->time act_part_II(): ', time.time() - start_act, ' seconds.')
+       
 
 
-            start_act = time.time()
-            list_result = pool.map( second_to_first ,   list_pair_res_and_modeley)
+           
+            list_result = map( second_to_first ,   list_pair_res_and_modeley)
             i_int = 0
             for i in list_result:
                 self.activ_npc(number_max_element(i) , self.started_list_NPC[i_int])
                 i_int += 1
-            print('->time act_part_III(): ', time.time() - start_act, ' seconds.')
-
 
         def tik():
-            start_4 = time.time()
+            #start_4 = time.time()
             init_obj()
-            print('->time init_obj(): ', time.time() - start_4, ' seconds.')
+            #print('->time init_obj(): ', time.time() - start_4, ' seconds.')
             step = 0
             while (step < number_step):
+                #start_act = time.time()
                 act()
                 step += 1
+                #print("time act : ", time.time()-start_act)
             list_ind = []
 
 
@@ -258,24 +277,26 @@ class Scene():
                 ))
 
         base = Genetic_algorithm(list_individes= list_individe , mutation_rate= 0.1 ,\
-                                 mutation_chance= 0.3, elite_part = 0.1, number_eras=number_epoh )
+                                 mutation_chance= 0.01, elite_part = 0.1, number_eras=number_epoh )
 
         while(base.eras < base.number_eras):
             start = time.time()
 
-            start_1 = time.time()
+            #start_1 = time.time()
             list_points = tik()
-            print('time tik(): ', time.time() - start_1,' seconds.')
+            #print('time tik(): ', time.time() - start_1,' seconds.')
 
-            start_2 = time.time()
+            #start_2 = time.time()
             base.start_eras(list_points)
-            print('time start_eras(): ', time.time() - start_2, ' seconds.')
+            #print('time start_eras(): ', time.time() - start_2, ' seconds.')
 
             i_int = 0
-            start_3 = time.time()
+            #start_3 = time.time()
             for i in self.list_modeley:
                 i.determine_model_weights_by_tensor(vector_in_tensor(base.list_individes[i_int].gene , i.get_model_weights_by_tensor()) )
                 i_int += 1
-            print('time determine_model_weights_by_tensor(): ', time.time() - start_3, ' seconds.')
+            #print('time determine_model_weights_by_tensor(): ', time.time() - start_3, ' seconds.')
 
-            print('all time: ', time.time() - start, ' seconds.')
+            f = open('data.txt' , 'a')
+            f.write('all time: '+ str(time.time() - start) + ' seconds.\n')
+            f.close()

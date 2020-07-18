@@ -9,6 +9,7 @@ class Obj():
         self.crd = crd
         self.angle = angle
         self.color = color
+        self.exist = True
 
     def moves(self, new_crd):
         self.crd = new_crd
@@ -42,7 +43,7 @@ class Food(End_obj):
 
     def __init__(self , crd , angle):
         super().__init__(crd,angle , color= 'yellow')
-        self.exist = True
+
 
 class NPC(Obj):  # subject
 
@@ -59,6 +60,9 @@ class NPC(Obj):  # subject
     def up_points(self):
         self.points += 1
 
+    def rotation(self, new_angle):
+        super().rotation(new_angle)
+        self.tik()
 
     def real_moves(self, new_crd):
         movx = self.crd[0] - new_crd[0]
@@ -107,6 +111,7 @@ class NPC(Obj):  # subject
         self.hp -= 50
         if (self.hp <= 0):
             self.status = "dead"
+
 
     def attack_enemy(self , list_npc):
         if (self.status != "dead"):

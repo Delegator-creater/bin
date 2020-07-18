@@ -5,6 +5,8 @@ if __name__ == '__main__':
 
     scena = Scene(10 , 10 , "")
 
+    open('data.txt' , 'w')
 
-    scena.simulation(10 , 10 , 100 , 10000 )
+    scena.simulation(20 , 5 , 50 , 10000 )
+
 
