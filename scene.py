@@ -170,6 +170,8 @@ class Scene():
         import random
         random.seed()
 
+
+
         self.started_list_NPC : list[Pair ] = []
         self.started_list_Food: list[Pair ] = []
 
@@ -241,7 +243,7 @@ class Scene():
             list_pair_res_and_modeley = []
             i_int = 0
             for i in res:
-                list_pair_res_and_modeley.append( Pair( [ i[0]/6.25 , i[1]/6.944 ] ,self.list_modeley[i_int]) )
+                list_pair_res_and_modeley.append( Pair( [ i[0]/(0.6944 * size_NPC - 1) , i[1]/(0.6944 * size_Food ) ] ,self.list_modeley[i_int]) )
                 i_int += 1
        
 

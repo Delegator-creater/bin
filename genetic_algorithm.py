@@ -85,7 +85,9 @@ class Genetic_algorithm():
     def start_eras(self , list_points_new : list ):
 
         f = open('data.txt' , 'a')
+        ff = open('data1.txt' , 'a')
         f.write(str(sorted(list_points_new , reverse = True)))
+        ff.write(str( self.eras )+ ' ' + str( max(list_points_new)) + "\n"   )
 
         list_points = []
         lll_int = 0
