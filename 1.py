@@ -218,108 +218,6 @@ def new_window():
     def info():
         pass
 
-    def start():
-        it : int = 0
-        model = Model(2, 5, prm_output_neuron="value", value_weights=0.5)
-        model.add_layer(Layer(5, 'Relu_Improved',  prm_neuron='value', value_weights=0.5))
-        model.add_layer(Layer(15, 'Relu_Improved', prm_neuron='value', value_weights=0.5))
-        model.add_layer(Layer(10, 'Relu_Improved', prm_neuron='value', value_weights=0.5))
-        model.unite()
-
-        for j in model.list_layer:
-            j.edit_edit_alfa_Relu_Improved(0.001)
-
-        list_start_crd = []
-        for j in scena.list_obj:
-            if (type(j.first()) == NPC ):
-                list_start_crd.append(j.first().crd)
-
-        r : float = 0.5
-
-        while (it < 5):
-            print(it)
-            list_tensor = model.get_list_tensors(11 , r , model.get_model_weights_by_tensor())
-            print(list_tensor)
-            list_score: list = []
-            score = 0
-
-            o1 = scena.list_obj[0].first()
-            o2 = scena.list_obj[1].first()
-            i = 0
-
-
-            while (i < len(list_tensor)):
-                s_int = 0
-                for s in scena.list_obj:
-                    if (type(s.first()) == NPC):
-                        s.first().crd    = list_start_crd[s_int]
-                        s.first().status = "live"
-                        s.first().hp     = 100
-                        s.first().hungry = 0
-                        s.first().energy = 100
-                        s_int += 1
-                    if (type(s.first()) == Food):
-                        s.first().exist  = True
-
-
-
-                model.determine_model_weights_by_tensor(list_tensor[i])
-
-
-
-                i += 1
-                triger = True
-
-                while (triger):
-
-                    d1 = model.result([o1.crd[0] / 15, o1.crd[1] / 15])
-                    d2 = model.result([o2.crd[0] / 15, o2.crd[1] / 15])
-
-                    d1_max = max(d1)
-                    d2_max = max(d2)
-
-                    l = 0
-                    for k in d1:
-                        if (d1_max == k):
-                            activ_npc(l, 0)
-                            break
-                        l += 1
-
-                    l = 0
-                    for k in d2:
-                        if (d2_max == k):
-                            activ_npc(l, 1)
-                            break
-                        l += 1
-
-
-                    if (o1.status == "dead"):
-                        triger = False
-                        #print("dead")
-                    else:
-                        score += 1
-                    if (o2.status == "dead"):
-                        triger = False
-                        #print("dead")
-                    else:
-                        score += 1
-
-
-
-                    root.update()
-                    time.sleep(0.000001*10**(it + 1))
-
-                list_score.append(score)
-            max_score = max(list_score)
-            it_list_int : int = 0
-            for it_list in list_tensor:
-                if (max_score == it_list_int):
-                    model.determine_model_weights_by_tensor(it_list)
-                    break
-                it_list_int += 1
-            r /= 10
-            it += 1
-        print(model.get_model_weights_by_tensor())
 
 
 
@@ -328,7 +226,7 @@ def new_window():
     menu = Menu( tearoff = 0 )
     menu.add_cascade(label = "Добавить.." ,    menu = addmenu)
     menu.add_command(label = "Свойства"   , command = info)
-    menu.add_command(label = "Старт"      , command = start)
+    menu.add_command(label = "Старт"      , command = lambda : scena.simulation(10 , 10 , 50 , 1000))
 
 
 

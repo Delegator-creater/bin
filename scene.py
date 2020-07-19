@@ -32,7 +32,9 @@ class Scene():
 
     def add_obj(self , new_obj , x : int , y : int):
         new_obj.crd = [self.s  * x , self.t * y ]
-        prim = self.c.create_rectangle( x , y , x + 1 / self.s , y + 1 / self.t , fill = new_obj.color , tag = 'dinamic') # prim - примитив
+        prim = None
+        if (self.drawing):
+            prim = self.c.create_rectangle( x , y , x + 1 / self.s , y + 1 / self.t , fill = new_obj.color , tag = 'dinamic') # prim - примитив
         self.list_obj.append(Pair(new_obj , prim))
 
     def change_crd0(self , x0_new : int , y0_new : int):
@@ -72,6 +74,8 @@ class Scene():
                                   (new_crd[0] + 1 - self.x0) / self.s , (new_crd[1] + 1 - self.y0) / self.t)
             else:
                 unit_list_obj.first().wait()
+
+
 
     def rotation_obj(self , sin_angle : float , unit_list_obj: Pair ):
 
@@ -117,7 +121,7 @@ class Scene():
                 if ( r <= 5 ):
                     angle = dot( crd, npc.angle)
                     if (angle > 0):
-                        result[0] += (angle ** 2) / (1 + r)
+                        result[0] += (angle ** 2) / (1 + r)**2
 
         for mm in self.started_list_Food:
             if (mm.first().exist):
@@ -126,7 +130,7 @@ class Scene():
                 if ( r <= 5 ):
                     angle = dot( crd, npc.angle)
                     if (angle > 0):
-                        result[1] += (angle ** 2) / (1 + r)
+                        result[1] += (angle ** 2) / (1 + r)**2
         return result
 
     def simulation(self , size_NPC : int , size_Food : int , number_step : int , number_epoh : int):
@@ -171,6 +175,8 @@ class Scene():
 
         def init_obj():
             i_int = 0
+            #for i in self.list_obj:
+                #self.c.delete( i.second() )
             self.list_obj.clear()
             self.started_list_NPC.clear()
             while (i_int < size_NPC):
@@ -178,13 +184,13 @@ class Scene():
                 new_crd = []
                 while (triger):
                     triger = False
-                    new_crd = [random.randint(0, self.sizex), random.randint(0, self.sizey)]
+                    new_crd = [random.randint(0, self.sizex - 1), random.randint(0, self.sizey - 1)]
                     for i in self.started_list_NPC:
                         triger = (i.first().crd == new_crd)
 
-                new_pair = Pair(NPC(new_crd , [1, 0]), None)
-                self.started_list_NPC.append(new_pair)
-                self.list_obj.append(new_pair)
+
+                self.add_obj( NPC( [0 , 0] , [1, 0]) ,  new_crd[0]/self.s , new_crd[1]/self.t )
+                self.started_list_NPC.append(self.list_obj[-1])
                 i_int += 1
 
             self.started_list_Food.clear()
@@ -194,15 +200,15 @@ class Scene():
                 new_crd
                 while (triger):
                     triger = False
-                    new_crd = [random.randint(0, self.sizex), random.randint(0, self.sizey)]
+                    new_crd = [random.randint(0, self.sizex - 1), random.randint(0, self.sizey - 1)]
                     for i in self.started_list_NPC:
                         triger = (i.first().crd == new_crd)
                     for i in self.started_list_Food:
                         triger = (i.first().crd == new_crd)
 
-                new_pair = Pair(Food(new_crd, [1, 0]), None)
-                self.started_list_Food.append(new_pair)
-                self.list_obj.append(new_pair)
+
+                self.add_obj(Food([0, 0], [1, 0]), new_crd[0] / self.s, new_crd[1] / self.t )
+                self.started_list_Food.append(self.list_obj[-1])
                 i_int += 1
 
 
@@ -228,15 +234,14 @@ class Scene():
             for i in self.started_list_NPC:
                 time_list_.append(i.first())
 
-            res  = map( self.scaning,\
-                             time_list_)
+            res  = map( self.scaning, time_list_)
            
 
            
             list_pair_res_and_modeley = []
             i_int = 0
             for i in res:
-                list_pair_res_and_modeley.append( Pair(i,self.list_modeley[i_int]) )
+                list_pair_res_and_modeley.append( Pair( [ i[0]/6.25 , i[1]/6.944 ] ,self.list_modeley[i_int]) )
                 i_int += 1
        
 
@@ -256,6 +261,8 @@ class Scene():
             while (step < number_step):
                 #start_act = time.time()
                 act()
+                #time.sleep(0.01)
+                #self.c.update_idletasks()
                 step += 1
                 #print("time act : ", time.time()-start_act)
             list_ind = []
@@ -276,9 +283,9 @@ class Scene():
                     )\
                 ))
 
-        base = Genetic_algorithm(list_individes= list_individe , mutation_rate= 0.1 ,\
-                                 mutation_chance= 0.01, elite_part = 0.1, number_eras=number_epoh )
-
+        base = Genetic_algorithm(list_individes= list_individe , mutation_rate= 0.01 ,\
+                                 mutation_chance= 0.4, elite_part = 0.1, number_eras=number_epoh )
+        angle = 0
         while(base.eras < base.number_eras):
             start = time.time()
 
@@ -289,6 +296,9 @@ class Scene():
             #start_2 = time.time()
             base.start_eras(list_points)
             #print('time start_eras(): ', time.time() - start_2, ' seconds.')
+
+            base.mutation_chance = 1 * abs(sin( angle ))
+            angle += 1
 
             i_int = 0
             #start_3 = time.time()
