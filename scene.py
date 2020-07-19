@@ -116,12 +116,13 @@ class Scene():
         result = [0, 0]
         for mm in self.started_list_NPC:
             if (mm.first() != npc):
-                crd = npc.vector_to(mm.first())
-                r = dot(crd , crd) ** 0.5
-                if ( r <= 5 ):
-                    angle = dot( crd, npc.angle)
-                    if (angle > 0):
-                        result[0] += (angle ** 2) / (1 + r)**2
+                if ( mm.first().status == 'live' ):
+                    crd = npc.vector_to(mm.first())
+                    r = dot(crd , crd) ** 0.5
+                    if ( r <= 5 ):
+                        angle = dot( crd, npc.angle)
+                        if (angle > 0):
+                            result[0] += (angle ** 2) / (1 + r)**2
 
         for mm in self.started_list_Food:
             if (mm.first().exist):
@@ -230,39 +231,26 @@ class Scene():
 
         def act():
 
-
-
-            time_list_ = []
+            triger_life = False
+            i_int = 0
             for i in self.started_list_NPC:
-                time_list_.append(i.first())
-
-            res  = map( self.scaning, time_list_)
-           
-
-           
-            list_pair_res_and_modeley = []
-            i_int = 0
-            for i in res:
-                list_pair_res_and_modeley.append( Pair( [ i[0]/(0.6944 * size_NPC - 1) , i[1]/(0.6944 * size_Food ) ] ,self.list_modeley[i_int]) )
+                if (i.first().exist == True):
+                    triger_life = True
+                    scan   = self.scaning(i.first())
+                    result = self.list_modeley[i_int].result(scan)
+                    self.activ_npc( number_max_element(result) , i )
                 i_int += 1
-       
 
-
-           
-            list_result = map( second_to_first ,   list_pair_res_and_modeley)
-            i_int = 0
-            for i in list_result:
-                self.activ_npc(number_max_element(i) , self.started_list_NPC[i_int])
-                i_int += 1
+            return triger_life
 
         def tik():
             #start_4 = time.time()
             init_obj()
             #print('->time init_obj(): ', time.time() - start_4, ' seconds.')
             step = 0
-            while (step < number_step):
+            triger_life = True
+            while ((step < number_step) and (act())):
                 #start_act = time.time()
-                act()
                 #time.sleep(0.01)
                 #self.c.update_idletasks()
                 step += 1
@@ -285,7 +273,7 @@ class Scene():
                     )\
                 ))
 
-        base = Genetic_algorithm(list_individes= list_individe , mutation_rate= 0.01 ,\
+        base = Genetic_algorithm(list_individes= list_individe , mutation_rate= 0.02 ,\
                                  mutation_chance= 0.4, elite_part = 0.1, number_eras=number_epoh )
         angle = 0
         while(base.eras < base.number_eras):
@@ -299,7 +287,7 @@ class Scene():
             base.start_eras(list_points)
             #print('time start_eras(): ', time.time() - start_2, ' seconds.')
 
-            base.mutation_chance = 1 * abs(sin( angle ))
+            base.mutation_chance = 1 * abs(sin( angle/10 ))
             angle += 1
 
             i_int = 0

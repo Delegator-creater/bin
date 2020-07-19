@@ -87,6 +87,7 @@ class NPC(Obj):  # subject
 
         if ( self.hp <= 0 ):
             self.status = "dead"
+            self.exist  = False
 
         self.up_points()
 
@@ -111,6 +112,7 @@ class NPC(Obj):  # subject
         self.hp -= 50
         if (self.hp <= 0):
             self.status = "dead"
+            self.exist  = False
 
 
     def attack_enemy(self , list_npc):
