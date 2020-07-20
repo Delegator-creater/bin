@@ -1,11 +1,12 @@
-from tkinter           import *
+from tkinter            import *
 import time
-from pair              import *
-from Neron_net         import *
-from numpy             import *
-from class_obj         import *
-from genetic_algorithm import *
-from multiprocessing   import Pool
+from pair               import *
+from Neron_net          import *
+from numpy              import *
+from class_obj          import *
+from genetic_algorithm  import *
+from concurrent.futures import ProcessPoolExecutor
+
 from number_max_element import *
 
 
@@ -59,6 +60,11 @@ class Scene():
                 if ( npc.crd == i.first().crd ):
                     npc.eat_food(i.first())
                     #print("eat")
+    def if_NPC (self , crd ):
+        for i in self.started_list_NPC:
+            if (i.first().crd == crd):
+                return False
+        return True
 
     def move_NPC(self, angle_step, unit_list_obj: Pair):
         new_crd    = [ 0 , 0]
@@ -66,8 +72,11 @@ class Scene():
         new_crd[1] = unit_list_obj.first().crd[1] + angle_step[1]
         if (unit_list_obj.first().status == "live"):
             if (((new_crd[0] >= 0) and (new_crd[0] < self.sizex)) and ((new_crd[1] >= 0) and (new_crd[1] < self.sizey))):
-                self.if_food(unit_list_obj.first())
-                unit_list_obj.first().step(angle_step)
+                if (self.if_NPC(new_crd)):
+                    unit_list_obj.first().step(angle_step)
+                    self.if_food(unit_list_obj.first())
+                else:
+                    unit_list_obj.first().wait()
 
                 if (self.drawing) :
                     self.c.coords(unit_list_obj.second(), (new_crd[0] - self.x0) / self.s , (new_crd[1] - self.y0) / self.t ,\
@@ -114,24 +123,17 @@ class Scene():
 
     def scaning(self, npc: NPC):
         result = [0, 0]
-        for mm in self.started_list_NPC:
-            if (mm.first() != npc):
-                if ( mm.first().status == 'live' ):
-                    crd = npc.vector_to(mm.first())
-                    r = dot(crd , crd) ** 0.5
-                    if ( r <= 5 ):
-                        angle = dot( crd, npc.angle)
-                        if (angle > 0):
-                            result[0] += (angle ** 2) / (1 + r)**2
-
-        for mm in self.started_list_Food:
-            if (mm.first().exist):
-                crd = npc.vector_to(mm.first())
-                r = dot(crd , crd) ** 0.5
-                if ( r <= 5 ):
-                    angle = dot( crd, npc.angle)
-                    if (angle > 0):
-                        result[1] += (angle ** 2) / (1 + r)**2
+        for i in self.list_obj:
+            if ( i.first().exist ):
+                crd = [i.first().crd[0] - npc.crd[0],\
+                       i.first().crd[1] - npc.crd[1]]
+                r      = sqrt(dot(crd , crd))
+                angle  = dot(crd , npc.angle)/r
+                res    = angle  / (1 + r)
+                if (type(i.first()) == Food ):
+                    result[1] += res
+                if (type(i.first()) == NPC ):
+                    result[0] += res
         return result
 
     def simulation(self , size_NPC : int , size_Food : int , number_step : int , number_epoh : int):
@@ -167,7 +169,6 @@ class Scene():
             return list_matrix
 
 
-        self.drawing = False
         import random
         random.seed()
 
@@ -178,8 +179,9 @@ class Scene():
 
         def init_obj():
             i_int = 0
-            #for i in self.list_obj:
-                #self.c.delete( i.second() )
+            if (self.drawing):
+                for i in self.list_obj:
+                    self.c.delete( i.second() )
             self.list_obj.clear()
             self.started_list_NPC.clear()
             while (i_int < size_NPC):
@@ -187,7 +189,7 @@ class Scene():
                 new_crd = []
                 while (triger):
                     triger = False
-                    new_crd = [random.randint(0, self.sizex - 1), random.randint(0, self.sizey - 1)]
+                    new_crd = [random.randint(self.sizex // 2, self.sizex - 1), random.randint(0, self.sizey - 1)]
                     for i in self.started_list_NPC:
                         triger = (i.first().crd == new_crd)
 
@@ -203,7 +205,7 @@ class Scene():
                 new_crd
                 while (triger):
                     triger = False
-                    new_crd = [random.randint(0, self.sizex - 1), random.randint(0, self.sizey - 1)]
+                    new_crd = [random.randint(0, self.sizex // 2 - 1), random.randint(0, self.sizey - 1)]
                     for i in self.started_list_NPC:
                         triger = (i.first().crd == new_crd)
                     for i in self.started_list_Food:
@@ -231,33 +233,29 @@ class Scene():
 
         def act():
 
+
             triger_life = False
             i_int = 0
             for i in self.started_list_NPC:
-                if (i.first().exist == True):
+                if (i.first().exist):
                     triger_life = True
-                    scan   = self.scaning(i.first())
-                    result = self.list_modeley[i_int].result(scan)
+                    scan        = self.scaning(i.first())
+                    result      = self.list_modeley[i_int].result(scan)
                     self.activ_npc( number_max_element(result) , i )
                 i_int += 1
 
             return triger_life
 
         def tik():
-            #start_4 = time.time()
             init_obj()
-            #print('->time init_obj(): ', time.time() - start_4, ' seconds.')
             step = 0
+            start_act = time.time()
             triger_life = True
             while ((step < number_step) and (act())):
-                #start_act = time.time()
-                #time.sleep(0.01)
-                #self.c.update_idletasks()
+                (self.c.update()) if (self.drawing) else None
                 step += 1
-                #print("time act : ", time.time()-start_act)
+
             list_ind = []
-
-
 
             for ite in self.started_list_NPC:
                 list_ind.append( ite.first().points )
@@ -274,29 +272,32 @@ class Scene():
                 ))
 
         base = Genetic_algorithm(list_individes= list_individe , mutation_rate= 0.02 ,\
-                                 mutation_chance= 0.4, elite_part = 0.1, number_eras=number_epoh )
+                                 mutation_chance= 0.10, elite_part = 0.1, number_eras=number_epoh )
         angle = 0
         while(base.eras < base.number_eras):
             start = time.time()
-
-            #start_1 = time.time()
             list_points = tik()
-            #print('time tik(): ', time.time() - start_1,' seconds.')
 
-            #start_2 = time.time()
             base.start_eras(list_points)
-            #print('time start_eras(): ', time.time() - start_2, ' seconds.')
 
-            base.mutation_chance = 1 * abs(sin( angle/10 ))
+
+            sin_ = sin( angle/20 )
+            base.mutation_chance = 1 * abs(sin_)
+            base.mutation_rate   = 0.5 * sqrt(1 - sin_ ** 2)
             angle += 1
 
             i_int = 0
-            #start_3 = time.time()
+
             for i in self.list_modeley:
                 i.determine_model_weights_by_tensor(vector_in_tensor(base.list_individes[i_int].gene , i.get_model_weights_by_tensor()) )
                 i_int += 1
-            #print('time determine_model_weights_by_tensor(): ', time.time() - start_3, ' seconds.')
+
 
             f = open('data.txt' , 'a')
             f.write('all time: '+ str(time.time() - start) + ' seconds.\n')
             f.close()
+
+        file = open('model.txt', 'w')
+        for i in base.list_individes:
+            file.write( str( i.gene ) + '\n' )
+        file.close()

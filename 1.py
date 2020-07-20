@@ -222,11 +222,11 @@ def new_window():
 
 
 
-
+    scena.drawing = True
     menu = Menu( tearoff = 0 )
     menu.add_cascade(label = "Добавить.." ,    menu = addmenu)
     menu.add_command(label = "Свойства"   , command = info)
-    menu.add_command(label = "Старт"      , command = lambda : scena.simulation(10 , 10 , 50 , 1000))
+    menu.add_command(label = "Старт"      , command = lambda : scena.simulation(100 , 50 , 100 , 10000 ))
 
 
 

@@ -52,8 +52,12 @@ class Genetic_algorithm():
         self.strat_crosing   = 'mixing'
 
     def mutation_popullation(self):
+        i_int = 0
+        i_max = len(self.list_individes) * self.elite_part
         for i in self.list_individes:
-            i.mutation(self.mutation_rate , self.mutation_chance)
+            if (i_int >= i_max):
+                i.mutation(self.mutation_rate , self.mutation_chance)
+            i_int += 1
 
     def edit_strat_crosing(self , strat_crosing):
         self.strat_crosing = strat_crosing
