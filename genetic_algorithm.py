@@ -66,14 +66,14 @@ class Genetic_algorithm():
         new_list_individes : list[Individe] = []
 
         i_int = 0
-        part_individes = int(len(self.list_individes) * self.elite_part)
+        part_individes = int(len(self.list_individes )* self.elite_part)
 
         while (i_int < part_individes):
             new_list_individes.append( list_points[i_int].second() )
             i_int += 1
 
         i_int -= part_individes
-        i_max = len(self.list_individes) - part_individes
+        i_max = len(self.list_individes) - part_individes - 1
         while (i_int < i_max):
             if (self.strat_crosing == 'mixing'):
                 new_individ = Individe( list_points[i_int].second().crossing_mixing(list_points[i_int + 1].second(), 1)   )
@@ -82,16 +82,15 @@ class Genetic_algorithm():
             new_list_individes.append( new_individ )
             i_int += 1
 
+        while (len(self.list_individes) != len(new_list_individes)):
+            n = random.randint(0 , len(self.list_individes) - 1)
+            new_list_individes.append( self.list_individes[n] )
+
         return new_list_individes
 
 
 
     def start_eras(self , list_points_new : list ):
-
-        f = open('data.txt' , 'a')
-        ff = open('data1.txt' , 'a')
-        f.write(str(sorted(list_points_new , reverse = True)))
-        ff.write(str( self.eras )+ ' ' + str( max(list_points_new)) + "\n"   )
 
         list_points = []
         lll_int = 0
@@ -102,7 +101,8 @@ class Genetic_algorithm():
 
         list_points = sorted(list_points , key = lambda unite_points : unite_points.first() , reverse= True )
 
-        self.list_individes =  self.selection_and_crossing(list_points)
+        if (len(self.list_individes) != 1):
+            self.list_individes =  self.selection_and_crossing(list_points)
 
         self.mutation_popullation()
 

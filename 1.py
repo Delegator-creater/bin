@@ -226,7 +226,8 @@ def new_window():
     menu = Menu( tearoff = 0 )
     menu.add_cascade(label = "Добавить.." ,    menu = addmenu)
     menu.add_command(label = "Свойства"   , command = info)
-    menu.add_command(label = "Старт"      , command = lambda : scena.simulation(100 , 50 , 100 , 10000 ))
+    menu.add_command(label = "Старт"      , command = lambda : scena.simulation(20 , 20 , 100 , 10000 , lambda x : 0.5*sin(x/50) , lambda x : 0.5*sin (x/50 + pi/4) , \
+                                                                                'test'))
 
 
 

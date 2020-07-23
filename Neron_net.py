@@ -66,7 +66,7 @@ class Neuron():
             if (self.prm == 'random'):
                 import random
                 random.seed()
-                weights = random.random()
+                weights = 2*random.random() - 1
 
             if (self.prm == 'null'):
                 weights = 0

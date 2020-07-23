@@ -10,6 +10,7 @@ class Obj():
         self.angle = angle
         self.color = color
         self.exist = True
+        self.block_vision = None
 
     def moves(self, new_crd):
         self.crd = new_crd
@@ -38,24 +39,27 @@ class End_obj(Obj):
 
     def __init__(self, crd, angle , color = 'blue'):
         super().__init__( crd, angle, color)
+        self.block_vision = False
 
 class Food(End_obj):
 
     def __init__(self , crd , angle):
         super().__init__(crd,angle , color= 'yellow')
+        self.block_vision = True
 
 
 class NPC(Obj):  # subject
 
     def __init__(self, crd, angle , radius_vision : float = 5 ):
         super().__init__( crd, angle, 'red')
-        self.hungry = 0
-        self.energy = 100
-        self.hp     = 100
-        self.status = "live"
+        self.hungry        = 0
+        self.energy        = 100
+        self.hp            = 100
+        self.status        = "live"
         self.radius_vision = radius_vision
         ###
-        self.points = 0
+        self.points        = 0
+        self.block_vision  = True
 
     def up_points(self):
         self.points += 1
@@ -68,7 +72,7 @@ class NPC(Obj):  # subject
         movx = self.crd[0] - new_crd[0]
         movy = self.crd[1] - new_crd[1]
         l = (movx ** 2 + movy ** 2) ** (0.5)
-        angle = [movx/l , movy/l]
+        self.angle = [movx/l , movy/l]
         self.moves( new_crd)
 
     #test : act
@@ -92,16 +96,16 @@ class NPC(Obj):  # subject
         self.up_points()
 
 
-    def step (self , angle_step): # angle_step нормированный ветор приведенный к главным осям
+    def step (self , angle_step): # angle_step нормированный ветор
         new_crdx = self.crd[0] + angle_step[0]
         new_crdy = self.crd[1] + angle_step[1]
-        self.real_moves([new_crdx , new_crdy])
+        self.moves([new_crdx , new_crdy])
         self.energy -= 2
         self.tik()
 
     def eat_food(self, food : Food):
         food.exist = False
-        self.hungry -=50
+        self.hungry -=100
         if (self.hungry < 0) :
             self.hungry = 0
         self.energy -= 50
@@ -131,4 +135,5 @@ class NPC(Obj):  # subject
     def wait(self):
         self.tik()
 
-
+class NPC_AI(NPC):
+    pass
