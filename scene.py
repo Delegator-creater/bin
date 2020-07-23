@@ -323,7 +323,7 @@ class Scene():
         self.list_modeley = []
         i_int = 0
         while ( i_int < size_NPC):
-            self.list_modeley.append(Model(20,4))
+            self.list_modeley.append(Model(20,3))
             self.list_modeley[i_int].add_layer(Layer(10 , function_activate_name= "Relu" , prm_neuron="random"))
             self.list_modeley[i_int].add_LSTM( LSTM(10,10,10))
             self.list_modeley[i_int].add_layer(Layer(10 , function_activate_name= "Relu" , prm_neuron="random"))
@@ -379,9 +379,12 @@ class Scene():
                                  mutation_chance= 0.01, elite_part = 0.05, number_eras=number_epoh )
         angle = 0
 
-        files = [open(name_file + '.txt' , 'w'),\
-                 open(name_file + '1.txt', 'w'),\
-                 open(name_file + 'model.txt','w')]
+        files = [name_file + '.txt' ,\
+                 name_file + '1.txt',\
+                 name_file + 'model.txt']
+
+        for i in files:
+            open(i,'w')
 
         while(base.eras < base.number_eras):
             start = time.time()
@@ -401,14 +404,20 @@ class Scene():
                 i.determine_model_weights_by_tensor(vector_in_tensor(base.list_individes[i_int].gene , i.get_model_weights_by_tensor()) )
                 i_int += 1
 
+            data = []
+            for i in files:
+                data.append( open(i,'a') )
 
-            files[0].write(str(base.list_individes)+'all time: '+ str(time.time() - start) + ' seconds.\n')
+            data[0].write(str(base.list_individes[0].gene)+'all time: '+ str(time.time() - start) + ' seconds.\n')
             point = 0
             for i in self.started_list_NPC:
                 point = i.first().points if (i.first().points > point) else point
-            files[1].write( str(base.eras) + ' ' + str(point))
+            data[1].write( str(base.eras) + ' ' + str(point) + '\n')
 
+            for i in data:
+                i.close()
 
+        ff = open(files[2] , 'a')
         for i in base.list_individes:
-            files[2].write( str( i.gene ) + '\n' )
-        file.close()
+            ff.write( str( i.gene ) + '\n' )
+        ff.close()
