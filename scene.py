@@ -6,6 +6,7 @@ from numpy              import *
 from class_obj          import *
 from genetic_algorithm  import *
 from concurrent.futures import ProcessPoolExecutor
+from pickle             import *
 
 from number_max_element import *
 
@@ -67,7 +68,6 @@ class Scene():
     def get_sizey(self):
         return  self.sizey
 
-
     def if_food (self , npc : NPC):
         for i in self.matix_obj[npc.crd[0]][npc.crd[1]]:
             if (i != None):
@@ -105,9 +105,6 @@ class Scene():
                                   (new_crd[0] + 1 - self.x0) / self.s , (new_crd[1] + 1 - self.y0) / self.t)
             else:
                 unit_list_obj.first().wait()
-
-
-
 
     def rotation_obj(self , sin_angle : float , unit_list_obj: Pair ):
 
@@ -204,11 +201,33 @@ class Scene():
             result += i_result
         return result
 
+    def lerning_scena(self , true_step  ,number_step : int  , model : Model , teta):
+        if ( len(model.input_layer.list_neuron) == 20 ):
+            for i in self.list_obj:
+                if ( type(i.first()) == NPC):
+                    npc = i.first()
+                    break
+            i_int = 0
+            while (i_int < number_step):
+                res = self.scaning(npc) + [npc.hungry/100 , npc.hp/100]
+                result = model.result(res)
+                self.activ_npc(true_step[i_int])
+                model.lerning(teta ,true_step[i_int] , i_int + 1 )
 
+    def save_scena_in_file(self , name_file : str):
+        file = open( name_file + '.bin' , 'wb')
+        dump( self.matix_obj , file )
 
+    def load_scena_out_file(self , name_file : str):
+        file = open( name_file + '.bin' , 'rb' )
+        matrix = load(file)
+        return matrix
 
-                
-
+    def clear(self):
+        if (self.drawing):
+            for i in self.list_obj:
+                self.c.delete(i.second())
+                i = None
 
 
     '''def scaning(self, npc: NPC):

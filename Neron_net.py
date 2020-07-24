@@ -37,13 +37,17 @@ class Neuron():
         if (neuron_bias) :
             self.count = 1
         if (function_activate_name == 'Relu'):
-            self.function_activate = self.Relu
+            self.function_activate            = self.Relu
+            self.derivative_function_activate = self.derivative_Relu
         if (function_activate_name == 'Relu_Improved'):
-            self.function_activate = self.Relu_Improved
+            self.function_activate            = self.Relu_Improved
+            self.derivative_function_activate = self.derivative_Relu_Improved
         if (function_activate_name == 'Sigmoid'):
-            self.function_activate = self.Sigmoid
+            self.function_activate            = self.Sigmoid
+            self.derivative_function_activate = self.derivative_Sigmoid
         if (function_activate_name == 'Tanh'):
-            self.function_activate = self.Tanh
+            self.function_activate            = self.Tanh
+            self.derivative_function_activate = self.derivative_Tanh
 
     def edit_alfa_Relu_Improved(self, value):
         self.alfa_Relu_Improved = value
@@ -51,14 +55,26 @@ class Neuron():
     def Relu(self , x):
         return x if (x >= 0) else 0
 
+    def derivative_Relu(self , x):
+        return 1 if (x >= 0) else 0
+
     def Relu_Improved(self , x):
         return 0 if (x < 0) else ( self.alfa_Relu_Improved * (x-1) + 1 if (x > 1) else x )
+
+    def derivative_Relu_Improved(self , x):
+        return 0 if (x < 0) else ( self.alfa_Relu_Improved  if (x > 1) else 1 )
 
     def Sigmoid(self , x):
         return 1/(1 + mt.exp(-x) )
 
+    def derivative_Sigmoid(self , x):
+        return  Sigmoid(x) * ( 1 - Sigmoid(x) )
+
     def Tanh(self, x):
         return (mt.exp(2*x) - 1)/(mt.exp(2*x) + 1)
+
+    def derivative_Tanh(self , x):
+        return  1 - Tanh(x) ** 2
 
     def add_relations(self , neuron , weights : float = 0 , serial_number : int = 0 ):
         if (( weights == 0 ) and ( not(self.neuron_bias) )):
@@ -87,9 +103,20 @@ class Neuron():
             else:
                 for i in self.list_of_weights :
                     self.count += i.first()*i.second().count
+                self.argum = self.count
                 self.count = self.function_activate(self.count)
         else:
             self.count = 1
+
+
+    def stochastic_gradient_descent_output(self , value ):
+        self.delta = value - self.count
+
+    def stochastic_gradient_descent(self , value):
+        self.delta += value
+
+
+
 
 class Layer():
 
@@ -159,6 +186,26 @@ class Layer():
                     i_int += 1
             j_int += 1
 
+    def stochastic_gradient_descent_output(self , value : list ):
+        i_int = 0
+        for i in self.list_neuron:
+            i.stochastic_gradient_descent_output( value[i_int] )
+            i_int += 1
+
+    def stochastic_gradient_descent(self):
+        for i in self.list_neuron:
+            for j in i.list_of_weights:
+                j.second().stochastic_gradient_descent(j.first() * i.delta)
+
+    def balance_correction(self , teta : float):
+        for i in self.list_neuron:
+            for j in i.list_of_weights:
+                j.edit_first(   j.first() + teta*i.delta*i.derivative_function_activate(i.argum) * j.second().count  )
+
+    def null_delta(self):
+        for i in self.list_neuron:
+            i.delta = 0
+
 class Model():
 
     def __init__(self , size_input : int , size_output : int , prm_output_neuron = "random" , value_weights = 0):
@@ -212,13 +259,11 @@ class Model():
                         l_int += 1
                     k.determine_model_weights_by_tensor(new_list)
 
-
     def result(self, value):
         if ( len(self.input_layer.list_neuron) - 1 == len(value) ):
             self.input_layer.pass_values(value)
             self.input_layer.next_layer.activate()
             return self.output_layer.get_result()
-
     #Метод не используется!
     def get_list_tensors(self, n : int ,  r : float , base : list):
         '''
@@ -268,6 +313,21 @@ class Model():
 
         return  list_T
 
+    def lerning(self , teta : float , true_values : list , n_iter_LSTM : int = 1):
+        self.output_layer.stochastic_gradient_descent_output( true_values )
+
+        i_int = len( self.list_layer ) - 1
+        while (i_int > 0):
+            if ( type(self.list_layer[i_int]) == Layer):
+                self.list_layer[i_int - 1].null_delta() if ( type(self.list_layer[i_int - 1]) == Layer ) else \
+                    self.list_layer[i_int - 1].output.null_delta()
+                self.list_layer[i_int].stochastic_gradient_descent()
+                self.list_layer[i_int].balance_correction(teta)
+            if (type(self.list_layer[i_int])  == LSTM):
+                self.list_layer[i_int].stochastic_gradient_descent(n_iter_LSTM , teta)
+            i_int -= 1
+
+
 class LSTM():
     '''Схема:
                                                     h_t
@@ -289,6 +349,11 @@ class LSTM():
         self.tanh_1    = Layer(size_C,             function_activate_name= "Tanh"     , prm_neuron="random")
         self.tanh_2    = Layer(size_h,             function_activate_name= "Tanh"     , prm_neuron="random")
         self.output    = Layer(size_h,             prm_layer= "input")
+
+        '****'
+        self.erorr_C
+        '****'
+
 
         self.h = []
         i = 0
@@ -345,8 +410,6 @@ class LSTM():
         self.output.pass_values(self.h)
         self.output.next_layer.activate()
 
-
-
     def get_result(self , input_x):
         self.activate(self.C , input_x , self.h)
 
@@ -375,4 +438,68 @@ class LSTM():
             self.tanh_2.determinate_layer_weights_by_tensor(tensor[4])
         else:
             print("Erorr, size tensor it's not format") #?
+
+    def stochastic_gradient_descent(self , n : int  , teta : float ):
+        i_int = 0
+        for i in self.tanh_2.list_neuron:
+            i.delta = self.output.list_neuron[i_int].delta if ( n == 0) else self.erorr_h[i_int]
+            self.sigmoid_3.list_neuron[i_int].delta = self.output.list_neuron[i_int].delta if ( n == 0) else self.erorr_h[i_int]
+            i_int += 1
+
+        self.input_2.null_delta()
+        self.tanh_2.stochastic_gradient_descent()
+        erorr_tanh_2 = 0
+
+
+        for i in self.input_2.list_neuron:
+            erorr_tanh_2 += i.delta
+
+        i_int = 0
+        for i in self.tanh_1.list_neuron:
+            i.delta = erorr_tanh_2 + ( 0 if (n == 0) else self.erorr_C[i_int])
+            i_int += 1
+
+        i_int = 0
+        for i in self.sigmoid_2.list_neuron:
+            i.delta = erorr_tanh_2 + ( 0 if (n == 0) else self.erorr_C[i_int])
+            i_int += 1
+
+        i_int = 0
+        for i in self.sigmoid_1.list_neuron:
+            i.delta = erorr_tanh_2 + ( 0 if (n == 0) else self.erorr_C[i_int])
+            i_int += 1
+
+        self.erorr_C.clear()
+        for i in self.input_2.list_neuron:
+            self.erorr_C.append(i.delta)
+
+        self.input_1.null_delta()
+
+
+        self.tanh_1   .stochastic_gradient_descent()
+        self.sigmoid_3.stochastic_gradient_descent()
+        self.sigmoid_2.stochastic_gradient_descent()
+        self.sigmoid_1.stochastic_gradient_descent()
+
+        self.erorr_h : list = []
+        i_int = 0
+        while (  i_int < len(self.h)  ):
+            self.erorr_h.append(self.input_1.list_neuron[i_int].delta)
+            i_int += 1
+
+        self.connects_layer.null_delta() if (n == 0) else None
+
+        for i in self.connects_layer.list_neuron:
+            i.delta += self.input_1.list_neuron[i_int].delta
+            i_int += 1
+
+        self.tanh_1.balance_correction(teta)
+        self.tanh_2.balance_correction(teta)
+        self.sigmoid_3.balance_correction(teta)
+        self.sigmoid_2.balance_correction(teta)
+        self.sigmoid_1.balance_correction(teta)
+
+
+
+
 
