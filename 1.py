@@ -69,7 +69,7 @@ def new_window():
         def sav ():
             scena.save_scena_in_file(entr_save.get())
             new_win.destroy()
-        save_button = Button(new_win ,command = sav  )
+        save_button = Button( new_win ,command = sav )
 
         lab_save    = Label(new_win , text = "Введите название файла")
         entr_save   = Entry(new_win , width = 20 , bd = 3)

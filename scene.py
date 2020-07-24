@@ -37,6 +37,19 @@ class Scene():
                 self.matix_obj.append(column)
                 i += 1
 
+    def init_matrix(self):
+        new_matrix = []
+        i = 0
+        while (i < self.sizex):
+            j = 0
+            column = []
+            while (j < self.sizey):
+                column.append([])
+                j += 1
+            new_matrix.append(column)
+            i += 1
+        return new_matrix
+
     def edit_field(self , sizex , sizey , name , list_obj = []):
         self.sizex = sizex
         self.sizey = sizey
@@ -216,18 +229,19 @@ class Scene():
 
     def save_scena_in_file(self , name_file : str):
         file = open( name_file + '.bin' , 'wb')
-        dump( self.matix_obj , file )
+        dump( [self.matix_obj , self.list_obj] , file )
 
     def load_scena_out_file(self , name_file : str):
         file = open( name_file + '.bin' , 'rb' )
-        matrix = load(file)
-        return matrix
+        data = load(file)
+        return data
 
     def clear(self):
         if (self.drawing):
             for i in self.list_obj:
                 self.c.delete(i.second())
-                i = None
+        self.list_obj = []
+        self.matix_obj = self.init_matrix()
 
 
     '''def scaning(self, npc: NPC):
