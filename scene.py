@@ -232,6 +232,7 @@ class Scene():
 
             count = 0
 
+
             while (i_int < number_step):
                 res = self.scaning(npc) + [npc.hungry/100 , npc.hp/100]
                 result = model.result(res)
@@ -239,7 +240,7 @@ class Scene():
                 step = []
                 j = 0
                 while (j < max_variac_step):
-                    step.append(1 if (true_step[i_int] == j) else result[j])
+                    step.append(1 if (true_step[i_int] == j) else (true_step[i_int]/2 if (result[j] >= true_step[i_int]) else result[j] ))
                     j += 1
 
                 j = 0

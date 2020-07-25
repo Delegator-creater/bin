@@ -85,7 +85,7 @@ class Neuron():
             if (self.prm == 'random'):
                 import random
                 random.seed()
-                weights = 2*random.random() - 1
+                weights = random.random()
 
             if (self.prm == 'null'):
                 weights = 0
@@ -335,7 +335,6 @@ class Model():
                     j += 1
             i_int -= 1
 
-
 class LSTM():
     '''Схема:
                                                     h_t
@@ -384,6 +383,12 @@ class LSTM():
         self.sigmoid_3.connect_layers(self.input_1)
         self.tanh_1.connect_layers(   self.input_1)
         self.tanh_2.connect_layers(   self.input_2)
+
+    def clear_memory(self):
+        for i in self.C:
+            i = 0
+        for i in self.h:
+            i = 0
 
     def activate(self):
 
