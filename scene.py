@@ -249,7 +249,7 @@ class Scene():
                     count_1 += (i - step[j] ) ** 2
                     j += 1
                 #count_1 /= max(result) if (max(result) != 0) else 1
-                count += count_1
+                count += sqrt(count_1)
 
                 self.activ_npc(true_step[i_int] , unit)
                 model.lerning(count *  teta ,step , i_int + 1 )
