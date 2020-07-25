@@ -5,6 +5,7 @@ from Neron_net import *
 from numpy import *
 from class_obj import *
 from scene import *
+from pickle import *
 
 
 def leng( a ):
@@ -35,6 +36,17 @@ triger_add = True
 x_event = 0
 y_event = 0
 
+def pup( func , arg):
+    def pup_one( func_one , arg_one):
+        return func_one(arg_one)
+    if (type(func) == list):
+        result = []
+        for i,j in func,arg:
+            result.append( pup_one(i,j) )
+        return result
+    else:
+        return pop_one(func,arg)
+
 def new_window():
     '''
     Метод создает новое окно редактора.
@@ -43,24 +55,41 @@ def new_window():
     После отрисовывает сетку(grid_Scene) учитывая масштаб, объекты которые может добавить пользователь
     :return: void
     '''
+    root = Tk()
+    mainmenu = Menu(root)
+    root.config(menu=mainmenu)
+
     a = 400
     b = 600
 
+   #''''win_info = Toplevel(root)
+    #win_info.title("Новая сцена")
+    #win_info.minsize(width=200, height=100)
+    #lab_info = Label(win_info, text="Введите название сцены:")
+    #ent_info_1 = Entry(win_info, width=20, bd=3)
+    #lab_info = Label(win_info, text="Введите высоту сцены:")
+    #ent_info_2 = Entry(win_info, width=20, bd=3)
+    #lab_info = Label(win_info, text="Введите ширину сцены:")
+    #ent_info_3 = Entry(win_info, width=20, bd=3)
+    #bot_info   = Button(win_info ,command = lambda : (  ))
+    #bor_info["text"] = "Подтвердить"'''
+
+
+
+    c = Canvas(width=b, height=a, bg='white')
+    c.focus_set()
+    c.pack()
 
 
     #init_scene(scena1)
 
 
 
-    root = Tk()
-    mainmenu = Menu(root)
-    root.config(menu=mainmenu)
 
-    c = Canvas(width=b, height=a, bg='white')
-    c.focus_set()
-    c.pack()
 
-    scena = Scene(int(10), int(10), 'name_scene', c)
+
+
+    scena = Scene(int(20), int(20), 'name_scene', c)
 
     def save_scene():
         new_win = Toplevel(root)
@@ -127,16 +156,13 @@ def new_window():
     def info():
         pass
 
-
-
-
-
+    file = open('model_20_4' + '.bin', 'rb')
     scena.drawing = True
     menu = Menu( tearoff = 0 )
     menu.add_cascade(label = "Добавить.." ,    menu = addmenu)
     menu.add_command(label = "Свойства"   , command = info)
-    menu.add_command(label = "Старт"      , command = lambda : scena.simulation(20 , 20 , 100 , 10000 , lambda x : 0.5*sin(x/50) , lambda x : 0.5*sin (x/50 + pi/4) , \
-                                                                                'test'))
+    menu.add_command(label = "Старт"      , command = lambda : scena.simulation(100 , 50 , 100 , 10000 , lambda x : 0.5*sin(x/50) , lambda x : 0.5*sin (x/50 + pi/4) , \
+                                                                                'test' , model = load(file) ))
 
 
 

@@ -2,11 +2,11 @@ from tkinter            import *
 import time
 from pair               import *
 from Neron_net          import *
-from numpy              import *
 from class_obj          import *
 from genetic_algorithm  import *
 from concurrent.futures import ProcessPoolExecutor
 from pickle             import *
+import copy
 
 from number_max_element import *
 
@@ -86,7 +86,8 @@ class Scene():
             if (i != None):
                 if (type(i.first()) == Food):
                     npc.eat_food(i.first())
-                    self.c.delete(i.second()) if (i.second() != None) else None
+                    if (self.drawing):
+                        self.c.delete(i.second()) if (i.second() != None) else None
                     #print("eat")
 
     def if_NPC (self , crd ):
@@ -172,7 +173,7 @@ class Scene():
             i_way         = [ [0 , 0] ]
             i_way_reverse = [ [0 , 0] ]
             k  = i[1]/i[0]
-            dx = sqrt(2 / (4 * ( k**2 + 1) )  )
+            dx = sqrt(1 / (10 * ( k**2 + 1) )  )
             dy = k * dx
             x  = dx
             y  = dy
@@ -197,8 +198,14 @@ class Scene():
             triger   = True
             for j in i:
                 if (triger):
-                    for k in self.matix_obj[int(j[0]*npc.angle[0] + j[1]*npc.angle[1])]\
-                                           [int(-j[0]*npc.angle[1] + j[1]*npc.angle[0])]:
+                    crd_matrix = [ npc.crd[0] + int(j[0]*npc.angle[0] + j[1]*npc.angle[1]),\
+                                   npc.crd[1] +int(-j[0]*npc.angle[1] + j[1]*npc.angle[0])]
+                    if ((crd_matrix[0] < 0) or (crd_matrix[0] >= self.sizex)):
+                        break
+                    if ((crd_matrix[1] < 0) or (crd_matrix[1] >= self.sizey)):
+                        break
+
+                    for k in self.matix_obj[crd_matrix[0]][crd_matrix[1]]:
                         if (k != None):
                             if (k.first().exist):
                                 r = i.index(j)
@@ -214,18 +221,39 @@ class Scene():
             result += i_result
         return result
 
-    def lerning_scena(self , true_step  ,number_step : int  , model : Model , teta):
-        if ( len(model.input_layer.list_neuron) == 20 ):
+    def lerning_scena(self , true_step , max_variac_step : int  ,number_step : int  , model : Model , teta):
+        if ( len(model.input_layer.list_neuron) == 21 ):
             for i in self.list_obj:
                 if ( type(i.first()) == NPC):
                     npc = i.first()
+                    unit = i
                     break
             i_int = 0
+
+            count = 0
+
             while (i_int < number_step):
                 res = self.scaning(npc) + [npc.hungry/100 , npc.hp/100]
                 result = model.result(res)
-                self.activ_npc(true_step[i_int])
-                model.lerning(teta ,true_step[i_int] , i_int + 1 )
+
+                step = []
+                j = 0
+                while (j < max_variac_step):
+                    step.append(1 if (true_step[i_int] == j) else result[j])
+                    j += 1
+
+                j = 0
+                count_1 = 0
+                for i in result:
+                    count_1 += (i - step[j] ) ** 2
+                    j += 1
+                #count_1 /= max(result) if (max(result) != 0) else 1
+                count += count_1
+
+                self.activ_npc(true_step[i_int] , unit)
+                model.lerning(count *  teta ,step , i_int + 1 )
+                i_int += 1
+            return sqrt(count)
 
     def save_scena_in_file(self , name_file : str):
         file = open( name_file + '.bin' , 'wb')
@@ -261,7 +289,7 @@ class Scene():
         return result'''
 
     def simulation(self , size_NPC : int , size_Food : int , number_step : int , number_epoh : int , function_rate_mutation,\
-                   function_chance_mutation , name_file : str):
+                   function_chance_mutation , name_file : str , model : Model = None):
 
 
         def tensor_in_vector (tensor_3):
@@ -356,12 +384,7 @@ class Scene():
         self.list_modeley = []
         i_int = 0
         while ( i_int < size_NPC):
-            self.list_modeley.append(Model(20,3))
-            self.list_modeley[i_int].add_layer(Layer(10 , function_activate_name= "Relu" , prm_neuron="random"))
-            self.list_modeley[i_int].add_LSTM( LSTM(10,10,10))
-            self.list_modeley[i_int].add_layer(Layer(10 , function_activate_name= "Relu" , prm_neuron="random"))
-            self.list_modeley[i_int].unite()
-            self.list_modeley[i_int].output_layer.edit_edit_alfa_Relu_Improved(0.1)
+            self.list_modeley.append(copy.deepcopy(model))
             i_int += 1
 
 
