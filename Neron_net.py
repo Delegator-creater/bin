@@ -213,7 +213,7 @@ class Layer():
 class Model():
 
     def __init__(self , size_input : int , size_output : int , prm_output_neuron = "random" , value_weights = 0):
-        self.output_layer = Layer(size_output , 'Sigmoid' , prm_neuron =  prm_output_neuron , prm_layer= "output" , value_weights = value_weights)
+        self.output_layer = Layer(size_output , 'Relu_Improved' , prm_neuron =  prm_output_neuron , prm_layer= "output" , value_weights = value_weights)
         self.input_layer  = Layer(size_input  , 'Relu_Improved' , prm_layer  =  'input' )
         self.list_layer   = []
         self.list_layer.append(self.input_layer)

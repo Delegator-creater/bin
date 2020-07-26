@@ -240,19 +240,31 @@ class Scene():
                 step = []
                 j = 0
                 while (j < max_variac_step):
-                    step.append(1 if (true_step[i_int] == j) else (true_step[i_int]/2 if (result[j] >= true_step[i_int]) else result[j] ))
+                    step.append(1 if (true_step[i_int] == j) else 0)
                     j += 1
+
+
+                i = 0
+                while (i < max_variac_step):
+                    column = []
+                    k = 0
+                    while (k < max_variac_step):
+                        column.append(  step[k] if (i == k) else result[k] )
+                        k += 1
+                    model.lerning(teta, column, i_int + 1)
+                    result = model.result(res)
+                    i += 1
+
 
                 j = 0
                 count_1 = 0
-                for i in result:
-                    count_1 += (i - step[j] ) ** 2
+                for ii in result:
+                    count_1 += (ii - step[j] ) ** 2
                     j += 1
                 #count_1 /= max(result) if (max(result) != 0) else 1
-                count += sqrt(count_1)
+                count += count_1
 
                 self.activ_npc(true_step[i_int] , unit)
-                model.lerning(count *  teta ,step , i_int + 1 )
                 i_int += 1
             return sqrt(count)
 
